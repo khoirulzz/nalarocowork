@@ -37,6 +37,7 @@ export class OfficeSimulation {
    const [x,z]=home;avatar.root.position.set(x,0,z);
    scene.add(avatar.root);
    const isOB=profile.role==="Office Boy",mode=isOB?"rest":"typing";
+   avatar.root.rotation.y=isOB?0:Math.PI;
    const data={p:profile,avatar,x,z,home:home.slice(),route:[],destination:null,mode,
     previous:mode,duration:between(10,26),speed:between(1.05,1.25),holding:null,handMesh:null,wait:0,blockedFor:0,
     idleCycle:isOB && profile.id==="ulin"?5:0,cleanCycle:0};
@@ -126,7 +127,11 @@ export class OfficeSimulation {
   const {step,p,target,obj}=job;
   job.stage="doing";job.time=0;job.duration=1.2;
   switch(step.action){
-   case "stand":p.mode="idle";p.duration=between(20,40);break;
+   case "stand":
+    if(distance([p.x,p.z],p.home)<.45){
+     if(this.go(p,[p.home[0]+.82,p.home[1]+.35],{near:0})){job.stage="moving";return;}
+    }
+    p.mode="idle";p.duration=between(20,40);break;
    case "sit":
     if(distance([p.x,p.z],p.home)>1.2){
      if(this.go(p,p.home,{near:0})){job.stage="moving";return;}
@@ -232,6 +237,10 @@ export class OfficeSimulation {
    if(this.active?.p!==p){
     p.duration-=frame;
     if(p.duration<=0&&!p.route.length)this.chooseIdle(p);
+   }
+   if(["typing","reading","designing","filing","thinking","phone"].includes(p.mode)&&distance([p.x,p.z],p.home)<1.3){
+    const angle=Math.PI,heading=p.avatar.root.rotation.y;
+    p.avatar.root.rotation.y+=Math.atan2(Math.sin(angle-heading),Math.cos(angle-heading))*Math.min(1,frame*3);
    }
    p.avatar.root.position.x=p.x;p.avatar.root.position.z=p.z;
    animateAvatar(p.avatar,frame,p.mode,p.speed);
