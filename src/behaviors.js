@@ -18,7 +18,7 @@ export class OfficeSimulation{
   for(const profile of STAFF){
    const model=createAvatar(profile);const home=PLACES[profile.home]||[0,0];
    model.root.position.set(home[0],0,home[1]);
-   model.root.rotation.y=Math.PI;
+   model.root.rotation.y=0;
    scene.add(model.root);
    this.people.set(profile.id,{p:profile,avatar:model,x:home[0],z:home[1],home,route:[],
     mode:profile.role==="Office Boy"?"idle":"working",duration:chance(2,10),last:"",history:[],speed:.82+Math.random()*.22});
