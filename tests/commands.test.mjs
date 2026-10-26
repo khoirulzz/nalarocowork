@@ -48,3 +48,26 @@ test("unavailable actions and unknown employees do not pretend to succeed",()=>{
  assert.throws(()=>normalizePlan({steps:[{actor:"fadil",action:"delete_files",target:null,location:null,objectId:null}]}));
  assert.throws(()=>normalizePlan({steps:[{actor:"fadil",action:"take_object",target:null,location:null,objectId:"nonexistent"}]}));
 });
+
+test("routes never finish by clipping through registered obstacles",()=>{
+ const routes=[
+  [PLACES.lobby,PLACES.owner],
+  [PLACES.finance,PLACES.meeting],
+  [PLACES.technical,PLACES.pantry],
+  [PLACES.supportA,PLACES.creative]
+ ];
+ for(const [start,end] of routes){
+  const nodes=pathfind(start,end);
+  assert.ok(nodes.length>2,"missing route from "+start+" to "+end);
+  let last=start;
+  for(const next of nodes){
+   const length=Math.hypot(next[0]-last[0],next[1]-last[1]);
+   for(let i=1;i<=Math.ceil(length/.12);i++){
+    const t=i/Math.ceil(length/.12);
+    const x=last[0]+(next[0]-last[0])*t,z=last[1]+(next[1]-last[1])*t;
+    assert.equal(isBlocked(x,z),false,"route segment hit obstacle at "+x+","+z);
+   }
+   last=next;
+  }
+ }
+});
