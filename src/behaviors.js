@@ -113,8 +113,8 @@ export class OfficeSimulation {
    case "place_object":place=target?[target.x,target.z]:step.location?PLACES[step.location]:null;break;
   }
   if(place){
-   const close=distance([p.x,p.z],place)<.95;
-   if(!close&&!this.go(p,place,{near:0})){
+   const close=distance([p.x,p.z],place)<(target?1.2:.8);
+   if(!close&&!this.go(p,place,{near:target?1.05:0})){
     this.report(p.p.name+" tidak menemukan rute aman.");
     this.active=null;return;
    }
@@ -138,7 +138,8 @@ export class OfficeSimulation {
    case "move_to":case "return_to_desk":case "follow":case "meet":
     p.mode="idle";p.duration=between(12,27);break;
    case "make_coffee":{
-    const machine=getObject("coffee_machine");\n    const cup=[...WORLD_OBJECTS.values()].find(o=>o.type==="cup"&&!o.owner&&Math.hypot(o.x-machine.x,o.z-machine.z)<2);
+    const machine=getObject("coffee_machine");
+    const cup=[...WORLD_OBJECTS.values()].find(o=>o.type==="cup"&&!o.owner&&Math.hypot(o.x-machine.x,o.z-machine.z)<2);
     if(!cup||p.holding){this.report("Perlu gelas kosong atau tangan yang bebas.");job.duration=0;break;}
     p.mode="making_coffee";job.duration=5;
     job.onDone=()=>{this.setHeld(p,cup);this.report(p.p.name+" selesai membuat kopi.");};
@@ -151,7 +152,8 @@ export class OfficeSimulation {
     break;
    }
    case "place_object":{
-    if(!p.holding){this.report("Tidak ada benda di tangan "+p.p.name+".");job.duration=0;break;}\n    if(target?.holding){this.report(target.p.name+" sedang membawa benda lain.");job.duration=0;break;}
+    if(!p.holding){this.report("Tidak ada benda di tangan "+p.p.name+".");job.duration=0;break;}
+    if(target?.holding){this.report(target.p.name+" sedang membawa benda lain.");job.duration=0;break;}
     p.mode="reaching";job.duration=1.7;
     job.onDone=()=>{this.dropHeld(p,target,step.location);this.report(p.p.name+" menyerahkan atau meletakkan barang.");};
     break;
