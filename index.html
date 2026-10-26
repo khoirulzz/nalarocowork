@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="id"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="theme-color" content="#111519"/><meta name="description" content="Nalaro Cowork — kantor 3D yang hidup."/>
+<title>Nalaro Cowork — Virtual Office</title></head>
+<body><div id="app">
+<header class="topbar"><div class="brand"><div class="n-mark">N</div><div><strong>Nalaro Cowork</strong><small>Virtual Office</small></div></div>
+<div class="header-right"><span id="ai-state" class="ai-state">Simulasi lokal</span><button id="quality-btn" class="ghost-btn" title="Ubah kualitas grafis">Grafis: Auto</button></div></header>
+<div class="layout">
+<aside class="people-pane"><div class="pane-heading"><h2>Karyawan</h2><span id="people-count">9 orang</span></div>
+<div class="search-wrap"><input id="people-search" placeholder="Cari karyawan" aria-label="Cari karyawan" autocomplete="off"/></div>
+<div id="people-list" class="people-list"></div><div class="pane-footer">Klik karyawan untuk melihat posisi dan memberi instruksi.</div></aside>
+<main class="stage"><div id="viewport" class="viewport"></div><div class="stage-top"><div class="scene-label"><strong>Nalaro Office</strong><span>3D workspace</span></div><button id="reset-camera" class="scene-button">Reset kamera</button></div>
+<div class="scene-bottom"><span><i class="live-dot"></i><b id="scene-status">Kantor aktif</b></span><span id="scene-fps">— FPS</span><span>Geser · Zoom · Klik karyawan</span></div></main>
+<aside class="command-pane"><div class="pane-heading"><h2>Panel Owner</h2><span>Ulum</span></div>
+<div class="selected-employee" id="selected-employee"></div>
+<section class="command-section"><div class="section-heading"><h3>Komando</h3><span id="command-mode">Rule engine</span></div>
+<form id="command-form"><textarea id="command-input" rows="3" placeholder="@fadil samperin Lukman dan suruh berdiri" aria-label="Perintah untuk karyawan"></textarea>
+<div class="send-bar"><span>Gunakan @nickname</span><button type="submit" id="send-command">Kirim <span aria-hidden="true">↗</span></button></div></form>
+<div class="quick-actions"><button data-prompt="@fadil samperin lukman lalu suruh berdiri">Panggil Lukman</button><button data-prompt="@adi pergi ke ruang meeting">Ke ruang meeting</button><button data-prompt="@ulum melambaikan tangan">Lambaikan tangan</button></div></section>
+<section class="activity-section"><div class="section-heading"><h3>Aktivitas</h3><button id="clear-log" class="plain-button">Bersihkan</button></div><div id="activity-log" class="activity-log" aria-live="polite"></div></section>
+</aside></div></div><script type="module" src="/src/main.js"></script></body></html>
