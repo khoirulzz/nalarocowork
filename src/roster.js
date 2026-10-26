@@ -13,7 +13,7 @@ export const STAFF = [
 export const PLACES = {
   owner:[-6.6,-3.45],supportA:[2.75,-3.6],supportB:[5.15,-3.6],finance:[-3.2,-3.5],
   technical:[-6.4,2.05],creative:[-3.25,2.05],operations:[2.8,2.05],pantry:[7.2,3.5],
-  utility:[7.8,2.3],meeting:[0.0,4.8],lobby:[0.3,-5.45],lounge:[6.9,-.1]
+  utility:[7.8,2.3],meeting:[0.0,3.5],lobby:[0.3,-5.45],lounge:[6.9,-.1]
 };
 export const PLACE_ALIASES = {
   "ruang rapat":"meeting","ruang meeting":"meeting","meeting":"meeting","rapat":"meeting",
