@@ -152,6 +152,18 @@ export function pathfind(start,goal,extra=[]){
  while(item!==id(sx,sz)&&item){
   const [x,z]=item.split(",").map(Number);points.push([x*size,z*size]);item=prev.get(item);
  }
- points.reverse();points.push(end);return points;
+ points.reverse();
+ // Never append an exact destination with a blocked intermediate segment.
+ // A last segment is valid only when samples along it stay collision-free.
+ const last=points.at(-1)||start;
+ const length=Math.hypot(end[0]-last[0],end[1]-last[1]);
+ const samples=Math.max(1,Math.ceil(length/.16));
+ let clear=true;
+ for(let i=1;i<=samples;i++){
+  const t=i/samples,px=last[0]+(end[0]-last[0])*t,pz=last[1]+(end[1]-last[1])*t;
+  if(isBlocked(px,pz,extra)){clear=false;break;}
+ }
+ if(clear)points.push(end);
+ return points;
 }
 export const COLLIDERS=blocked;

@@ -151,10 +151,12 @@ async function checkProvider(){
   const res=await fetch("/api/health",{cache:"no-store"});
   if(!res.ok)throw Error();
   const data=await res.json();groqReady=!!data.ready;
-  $("connection-status").textContent=groqReady?"Groq siap":"Perintah lokal";
- }catch{groqReady=false;$("connection-status").textContent="Perintah lokal";}
+  $("connection-status").textContent=groqReady?"Groq siap":"Groq belum dikonfigurasi";
+ }catch{groqReady=false;$("connection-status").textContent="Groq tidak terhubung";}
 }
 checkProvider();
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)checkProvider();});
+window.addEventListener("focus",()=>checkProvider());
 const ray=new THREE.Raycaster(),cursor=new THREE.Vector2();
 let pointerStart=null;
 renderer.domElement.addEventListener("pointerdown",e=>{pointerStart=[e.clientX,e.clientY];});
