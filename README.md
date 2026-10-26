@@ -1,77 +1,69 @@
 # Nalaro Cowork
 
-Kantor virtual 3D Minecraft/Roblox-inspired untuk tim Nalaro. Simulasi berjalan lokal di browser, **Groq hanya dipakai untuk menafsirkan perintah bahasa natural yang belum dikenali parser lokal**.
+Kantor virtual 3D untuk sembilan karyawan Nalaro. Dunia dan aktivitas sehari-hari berjalan lokal. Groq menafsirkan perintah yang belum dikenali parser lokal.
 
-### Mulai (satu terminal)
+## Menjalankan
 
 ```bash
-git clone https://github.com/khoirulzz/nalarocowork.git
-cd nalarocowork
-npm install
+npm ci
 npm run dev
 ```
 
-Buka **http://127.0.0.1:5173/**. Tanpa API key sekalipun dunia 3D, animasi idle, dan perintah umum tetap berjalan.
-
-### Mengaktifkan Groq
-
-Copy `.env.example` menjadi `.env`, lalu isi:
+Buka http://127.0.0.1:5173/. Salin `.env.example` ke `.env` untuk mengaktifkan Groq:
 
 ```env
-GROQ_API_KEY=gsk_isi_key_milikmu
+GROQ_API_KEY=isi_key_milikmu
 GROQ_MODEL=openai/gpt-oss-20b
 ```
 
-**Restart `npm run dev` setelah mengubah `.env`.** Sejak v0.3, tidak perlu `npm run server` pada terminal kedua: proxy Groq berjalan dalam proses Vite melalui `vite.config.js` dan endpoint same-origin `/api/plan` / `/api/health`. Kunci hanya dibaca pada sisi Node, tidak dikirim ke browser. Jangan menggunakan prefix `VITE_` untuk API key.
+Mulai ulang Vite setelah mengedit `.env`. Proxy `/api/plan` dan `/api/health` berjalan bersama Vite. Key hanya dibaca oleh Node. Jangan gunakan prefix `VITE_` untuk key. Status koneksi berada dalam Pengaturan dan menunjukkan keberadaan konfigurasi, bukan keberhasilan autentikasi ke Groq.
 
-Status **Groq siap** ditampilkan di bagian kanan atas bila key sudah terbaca. Model mungkin tetap menolak perintah yang tidak punya aksi fisik di dunia 3D. Ada validasi tambahan pada keluaran model.
+## Menggunakan kantor
 
-### Cara mencoba
+Kantor memenuhi layar. Toolbar SVG di kanan atas membuka Karyawan, Perintah, Objek, Riwayat, dan Pengaturan. Panel krem memakai garis dan bayangan tegas; tidak ada sidebar permanen atau glassmorphism. Escape atau klik di luar panel untuk menutupnya.
 
-```
-@fadil samperin lukman lalu suruh berdiri
-@adi pergi ke ruang meeting
+Scroll/cubit untuk zoom, geser untuk orbit, klik kanan dan geser untuk pan. Kontrol +/- dan reset berada di kanan bawah. Pilih karyawan, lalu **Dekati** untuk fokus ke aktivitasnya. Nama ditampilkan untuk karyawan yang dipilih/ditunjuk; aktifkan **Semua nama** jika dibutuhkan.
+
+Mezzanine sayap kanan dapat didatangi melalui tangga. Ruang rapat dan lounge atas berada di sana. Matikan **Lantai atas** untuk melihat area di bawahnya. Pilihan **Jeda simulasi** menghentikan aktivitas dunia; preferensi sistem reduced motion memulai simulasi dalam keadaan jeda.
+
+## Perintah
+
+```text
+@ulum datangi siswo dan suruh dia push up
+@adi dan @sumanto melambai
 @agil buat kopi untuk ulum
-@ulin bersihkan ruang owner
-@fadil ambil dokumen finance lalu taruh di ruang owner
-@ulum melambaikan tangan
+@ulum minum kopi
+@ulin bersihkan meja ulum
+@huda naiki kursi lalu kembali ke meja
+@fadil pergi ke ruang meeting lalu kembali ke meja
+@fadil ambil document_finance lalu taruh di meja ulum
 ```
 
-Panel kiri berisi karyawan, panel kanan berisi komando. Masing-masing bisa di-collapse. Klik **Riwayat** untuk drawer aktivitas atau **Objek** untuk melihat ID objek dan properti dasar. Hanya nickname karyawan yang melayang di dalam ruang kantor.
+Aksi dijalankan sesuai urutan, termasuk pergantian pelaku. Pengantar mendatangi penerima dan berbicara sebelum penerima melakukan instruksi. Pengambilan, pembuatan, pengantaran, dan konsumsi kopi memperbarui kepemilikan serta isi cangkir. Kegagalan satu aksi membatalkan sisa rangkaian tersebut dan dilaporkan di Riwayat.
 
-### Perubahan penting v0.3
-- Flat white SaaS UI; tidak ada badge/teks dekoratif di dunia kantor; sidebar kiri-kanan collapsible.
-- Ruangan lebih luas: kantor owner dan rapat tertutup dengan partisi kaca dan pintu, finance, creative, tech, area kerja terbuka, pantry, lounge.
-- Behavior idle berbobot: pekerja lebih lama mengetik/duduk; OB membersihkan zona secara bergiliran. Perilaku idle tidak memusatkan karyawan di satu target.
-- Navigasi A* melalui bukaan partisi; runtime steering menghindari karyawan lain dan mencoba rerouting sebelum bergerak lagi.
-- Semua furnitur/props diberi ID dari registry `WORLD_OBJECTS`. Perintah awal mengambil benda portabel, membuat kopi, meletakkan/menyerahkan benda, membersihkan area.
-- Groq proxy langsung tersedia lewat `npm run dev`; .env tetap tidak dikomit.
+Klik benda atau buka Objek untuk melihat dan menyalin ID. Meja, kursi, monitor, printer, dokumen, cangkir, tablet, sapu, dan perabot lain memiliki ID tetap. Benda portabel memiliki satu pemilik. Kursi yang sedang digunakan tidak bisa dinaiki orang lain.
 
-### Struktur kode
+Untuk gestur di luar grammar lokal, Groq dapat menyusun `animate` dari 18 pose: misalnya berlutut, mengelap, mengangguk, menunjuk, jongkok, atau merayakan. Rangkaian dibatasi 6 klip dan 45 detik. Ini komposisi gerakan dasar yang tersedia, bukan eksekusi kode AI atau sintesis fisika bebas. Gerakan push up, pembersihan meja, dan naik/turun kursi juga tersedia sebagai aksi khusus.
+
+## Implementasi
+
+- `src/office.js`: geometri, material, registry objek, collider per lantai, A*.
+- `src/avatars.js`: rig siku/lutut, transisi pose, tempo dan fase karakter.
+- `src/behaviors.js`: idle sesuai pekerjaan, antrean dependensi, kepemilikan objek, navigasi tangga.
+- `src/action-contract.js`: kontrak aksi, JSON Schema dan validator bersama server/browser.
+- `src/commands.js`: grammar lokal, rangkaian dan delegasi, fallback Groq.
+- `src/main.js`: toolbar/popup, kamera dan pemilihan objek/karyawan.
+- `server/groq.mjs`: structured output, validasi semantik, percobaan ulang terbatas, timeout/rate limit.
+
+Detail arsitektur dan batasan ada di [docs/OFFICE_V04.md](docs/OFFICE_V04.md).
+
+## Verifikasi
+
+```bash
+npm test
+npm run build
 ```
-src/
-  main.js      # Three.js & owner dashboard
-  office.js    # world, doors, asset registry, navigation
-  roster.js    # 9 employees, spots and roles
-  avatars.js   # articulated procedural voxel avatars
-  behaviors.js # role-aware idle schedule & interactions
-  commands.js  # local commands and strict validated Groq plan
-  styles.css
-server/groq.mjs # Groq API / rate control
-vite.config.js  # runs local Groq proxy with Vite
-```
 
-### Performa dan batasan
+Test mencakup validasi JSON, perbaikan respons model dengan mock provider, delegasi, perpindahan lantai, inventori, kopi, pembersihan, naik/turun kursi, stop, serta 10 menit simulasi idle. Pengujian live Groq membutuhkan API key dan koneksi pengguna.
 
-Three.js/WebGL2 harus didukung. Pengaturan grafis **Hemat** menurunkan render pixel ratio. Profil FPS aktual bergantung GPU laptop pengguna. Sistem perilaku dan penghindaran tabrakan ini adalah langkah MVP; belum ada physics rigid-body penuh, IK realistis, atau pengujian perilaku sepanjang berjam-jam. Beberapa animasi objek masih disimulasikan dengan proxy tangan sederhana, bukan gerakan manusia sinematik. Aset berbasis foto asli teman tidak dimasukkan ke repo publik.
-
-Aplikasi **belum memiliki akses ke repo NalaroStore atau tools eksternal lain**. Integrasi proyek nanti perlu sandbox dan approval.
-
-## Pengujian UI dan Groq (2026-10-26)
-Tampilan menggunakan panel karyawan/owner yang bisa ditutup, sidebar riwayat, serta daftar ID objek.
-Kantor telah diperluas, ruang owner/finance/meeting diberi sekat, sementara OB bergerak di area umum.
-Idle dan animasi berasal dari aturan lokal, **bukan token Groq**. Anti-crowd menghindari penumpukan pada spot idle dan menghindari overlap antar-NPC.
-
-Jalankan cukup `npm run dev` untuk menggunakan middleware Groq pada Vite. File `.env` berada di root repo dan memuat `GROQ_API_KEY=gsk_...`; **restart Vite** setelah mengedit `.env`. Tidak perlu `npm run server` kedua untuk mode dev. Indikator akan menampilkan `Groq siap` setelah `/api/health` membaca key. Ini hanya mengecek keberadaan key, **bukan** memastikan kredensial valid: perintah Groq pertama akan menguji jaringan serta key. Jangan pernah menyimpan key di `VITE_*` atau meng-commit `.env`.
-
-Jika status tetap belum terkonfigurasi, cek apakah file benar bernama `.env` (bukan `.env.txt`) dan apakah Vite dijalankan dari folder repo. Perintah `@fadil samperin lukman dan suruh berdiri` tidak membutuhkan Groq; perintah di luar grammar lokal memakai /api/plan.
+WebGL2 diperlukan. Pilihan grafis Hemat mengurangi resolusi render. Geometri statis dan bagian rig digabung berdasarkan material untuk menekan draw call. Avatar tetap bergaya voxel; belum memakai IK penuh, rigid body, atau animasi motion capture. Agen tidak memiliki akses ke GitHub atau aplikasi kerja eksternal.

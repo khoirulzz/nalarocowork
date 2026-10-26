@@ -27,12 +27,12 @@ test("office has enclosed partitions and walkable doorways",()=>{
 });
 test("delegate inter-employee instruction",()=>{
  const s=parseLocal("@fadil samperin lukman dan suruh dia berdiri").steps;
- assert.deepEqual(s.map(x=>x.action),["move_to","stand"]);
- assert.equal(s[0].target,"lukman");assert.equal(s[1].actor,"lukman");
+ assert.deepEqual(s.map(x=>x.action),["move_to","talk","stand"]);
+ assert.equal(s[0].target,"lukman");assert.equal(s[2].actor,"lukman");
 });
 test("local coffee workflow and area cleaning",()=>{
  const s=parseLocal("@agil buat kopi untuk ulum").steps;
- assert.deepEqual(s.map(x=>x.action),["make_coffee","move_to","place_object"]);
+ assert.deepEqual(s.map(x=>x.action),["make_coffee","place_object"]);
  assert.equal(s[1].target,"ulum");
  const c=parseLocal("@ulin bersihkan ruang meeting").steps;
  assert.equal(c[0].action,"clean_area");assert.equal(c[0].location,"meeting");
