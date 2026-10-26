@@ -36,7 +36,8 @@ export function parseLocal(text){
  if(stop)return {steps:[step(from.id,"stop")]};
  if(waving)return {steps:[step(from.id,"wave")]};
  if(walk&&(target||loc))steps.push(step(from.id,"move_to",target?.id||null,loc));
- if(calling&&target&&loc&&walk)steps.push(step(target.id,"move_to",null,loc));\n if(standing)steps.push(step(calling&&target?target.id:from.id,"stand"));
+ if(calling&&target&&loc&&walk)steps.push(step(target.id,"move_to",null,loc));
+ if(standing)steps.push(step(calling&&target?target.id:from.id,"stand"));
  if(sitting)steps.push(step(calling&&target?target.id:from.id,"sit"));
  if(following&&target)steps.push(step(target.id,"follow",from.id));
  // Avoid pretending a complex command worked when we do not recognize the intent.
