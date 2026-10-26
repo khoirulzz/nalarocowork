@@ -39,7 +39,7 @@ export class OfficeSimulation {
    const isOB=profile.role==="Office Boy",mode=isOB?"rest":"typing";
    const data={p:profile,avatar,x,z,home:home.slice(),route:[],destination:null,mode,
     previous:mode,duration:between(10,26),speed:between(1.05,1.25),holding:null,handMesh:null,wait:0,blockedFor:0,
-    idleCycle:0,cleanCycle:profile.id==="ulin"?5:0};
+    idleCycle:isOB && profile.id==="ulin"?5:0,cleanCycle:0};
    this.staff.set(profile.id,data);
   }
  }
@@ -138,7 +138,7 @@ export class OfficeSimulation {
    case "move_to":case "return_to_desk":case "follow":case "meet":
     p.mode="idle";p.duration=between(12,27);break;
    case "make_coffee":{
-    const cup=[...WORLD_OBJECTS.values()].find(o=>o.type==="cup"&&!o.owner);
+    const machine=getObject("coffee_machine");\n    const cup=[...WORLD_OBJECTS.values()].find(o=>o.type==="cup"&&!o.owner&&Math.hypot(o.x-machine.x,o.z-machine.z)<2);
     if(!cup||p.holding){this.report("Perlu gelas kosong atau tangan yang bebas.");job.duration=0;break;}
     p.mode="making_coffee";job.duration=5;
     job.onDone=()=>{this.setHeld(p,cup);this.report(p.p.name+" selesai membuat kopi.");};
@@ -151,7 +151,7 @@ export class OfficeSimulation {
     break;
    }
    case "place_object":{
-    if(!p.holding){this.report("Tidak ada benda di tangan "+p.p.name+".");job.duration=0;break;}
+    if(!p.holding){this.report("Tidak ada benda di tangan "+p.p.name+".");job.duration=0;break;}\n    if(target?.holding){this.report(target.p.name+" sedang membawa benda lain.");job.duration=0;break;}
     p.mode="reaching";job.duration=1.7;
     job.onDone=()=>{this.dropHeld(p,target,step.location);this.report(p.p.name+" menyerahkan atau meletakkan barang.");};
     break;
