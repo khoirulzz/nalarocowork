@@ -66,3 +66,12 @@ vite.config.js  # runs local Groq proxy with Vite
 Three.js/WebGL2 harus didukung. Pengaturan grafis **Hemat** menurunkan render pixel ratio. Profil FPS aktual bergantung GPU laptop pengguna. Sistem perilaku dan penghindaran tabrakan ini adalah langkah MVP; belum ada physics rigid-body penuh, IK realistis, atau pengujian perilaku sepanjang berjam-jam. Beberapa animasi objek masih disimulasikan dengan proxy tangan sederhana, bukan gerakan manusia sinematik. Aset berbasis foto asli teman tidak dimasukkan ke repo publik.
 
 Aplikasi **belum memiliki akses ke repo NalaroStore atau tools eksternal lain**. Integrasi proyek nanti perlu sandbox dan approval.
+
+## Pengujian UI dan Groq (2026-10-26)
+Tampilan menggunakan panel karyawan/owner yang bisa ditutup, sidebar riwayat, serta daftar ID objek.
+Kantor telah diperluas, ruang owner/finance/meeting diberi sekat, sementara OB bergerak di area umum.
+Idle dan animasi berasal dari aturan lokal, **bukan token Groq**. Anti-crowd menghindari penumpukan pada spot idle dan menghindari overlap antar-NPC.
+
+Jalankan cukup `npm run dev` untuk menggunakan middleware Groq pada Vite. File `.env` berada di root repo dan memuat `GROQ_API_KEY=gsk_...`; **restart Vite** setelah mengedit `.env`. Tidak perlu `npm run server` kedua untuk mode dev. Indikator akan menampilkan `Groq siap` setelah `/api/health` membaca key. Ini hanya mengecek keberadaan key, **bukan** memastikan kredensial valid: perintah Groq pertama akan menguji jaringan serta key. Jangan pernah menyimpan key di `VITE_*` atau meng-commit `.env`.
+
+Jika status tetap belum terkonfigurasi, cek apakah file benar bernama `.env` (bukan `.env.txt`) dan apakah Vite dijalankan dari folder repo. Perintah `@fadil samperin lukman dan suruh berdiri` tidak membutuhkan Groq; perintah di luar grammar lokal memakai /api/plan.
