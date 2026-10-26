@@ -13,7 +13,7 @@ export const STAFF=[
 export const PLACES={
  owner:[-12,-5.1], finance:[-11.8,2.3],technical:[-2.8,-5.4],creative:[-12,8.5],
  operations:[.8,-1.5],supportA:[3.6,4.3],supportB:[6.6,4.3],
- pantry:[13.2,6.8],utility:[10.3,7.0],meeting:[11,-4.4],lobby:[0,8.7],
+ pantry:[13.2,6.8],utility:[11.5,6.7],meeting:[12,-4.4],mezzanine:[11,-1.5],lobby:[0,8.7],
  lounge:[-3,3.0],hall:[0,0],printer:[-2,1.8],storage:[13.8,9]
 };
 export const PLACE_ALIASES={
@@ -23,7 +23,7 @@ export const PLACE_ALIASES={
  "ruang teknisi":"technical","meja teknisi":"technical",
  "meja support":"supportA","customer service":"supportA",
  "ruang operasi":"operations","meja asisten":"operations",
- "ruang meeting":"meeting","ruang rapat":"meeting","meeting":"meeting",
+ "lantai dua":"mezzanine","lantai atas":"mezzanine","mezzanine":"mezzanine","ruang meeting":"meeting","ruang rapat":"meeting","meeting":"meeting",
  "pantry":"pantry","dapur":"pantry","lobi":"lobby","lobby":"lobby",
  "ruang santai":"lounge","sofa":"lounge","printer":"printer",
  "gudang":"storage","koridor":"hall"
