@@ -124,20 +124,41 @@ export function createAvatar(p) {
  root.traverse(obj=>{if(obj.isMesh)obj.userData.staffId=p.id;});
  return {root,p,head,torso,arms,legs,label,bubble,animationClock:Math.random()*9,pose:"idle"};
 }
-export function animateAvatar(a,dt,mood,speed=0){
- const t=a.animationClock+=dt, walk=mood==="walking",sit=mood==="sitting",work=mood==="working";
- const s=walk?Math.sin(t*10.5)*Math.min(.62,.34+speed*.22):0;
- const relax=Math.sin(t*1.55)*.015;
- a.root.position.y=sit?-.36:walk?Math.abs(Math.sin(t*10.5))*.045:relax;
- a.legs.left.rotation.x+=( (walk?-s:sit?-1.12:0)-a.legs.left.rotation.x)*Math.min(1,dt*9);
- a.legs.right.rotation.x+=( (walk?s:sit?-1.12:0)-a.legs.right.rotation.x)*Math.min(1,dt*9);
- a.arms.left.rotation.x+=((walk?s:work?-.65:mood==="wave"?-.2:0)-a.arms.left.rotation.x)*Math.min(1,dt*9);
- a.arms.right.rotation.x+=((walk?-s:work?-.65:mood==="wave"?-2.3:0)-a.arms.right.rotation.x)*Math.min(1,dt*9);
- a.arms.right.rotation.z=mood==="wave"?Math.sin(t*12)*.32:0;
- a.head.rotation.y=Math.sin(t*.65)* (mood==="look"?.30:.06);
- a.head.rotation.z=mood==="stretch"?Math.sin(t*2)*.12:0;
- a.torso.rotation.z=mood==="stretch"?Math.sin(t*1.7)*.085:0;
- if(work){a.arms.left.rotation.z=.05+Math.sin(t*10)*.07;a.arms.right.rotation.z=-.05+Math.sin(t*11)*.07;}
- else {a.arms.left.rotation.z*=.8;}
- a.bubble.hidden=mood!=="talking";if(mood==="talking")a.bubble.textContent="•••";
+export function animateAvatar(a,dt,mood,speed=1) {
+ const t=a.animationClock+=dt;
+ const typing=["typing","designing","filing"].includes(mood),seated=["typing","designing","reading","filing","thinking","phone"].includes(mood);
+ const walking=mood==="walking",cleaning=["cleaning","wiping"].includes(mood);
+ const wave=mood==="wave",reach=mood==="reaching",coffee=mood==="making_coffee",carrying=mood==="carrying";
+ const looking=mood==="look"||mood==="inspecting"||mood==="thinking";
+ const leftStep=walking?Math.sin(t*8.5)*(.42+speed*.04):0;
+ const ease=Math.min(1,dt*7.5);
+ const pose=(joint,axis,target)=>joint.rotation[axis]+=(target-joint.rotation[axis])*ease;
+ a.root.position.y=seated?-.29:walking?Math.abs(Math.sin(t*8.5))*.036:Math.sin(t*.8)*.009;
+ const leg=seated?-1.13:0;
+ pose(a.legs.left,"x",leg-leftStep);pose(a.legs.right,"x",leg+leftStep);
+ const small=Math.sin(t*7.4)*.08,large=Math.sin(t*3.2)*.16;
+ let la=0,ra=0,lz=0,rz=0,tilt=0,body=0,look=Math.sin(t*.41)*.045;
+ if(walking){la=leftStep*.64;ra=-leftStep*.64;tilt=.018*Math.sin(t*8.5);}
+ if(typing){la=-.74+small;ra=-.74+Math.sin(t*9.1)*.09;tilt=.012*Math.sin(t*2.3);}
+ if(mood==="reading"){la=-.55;ra=-.20;lz=-.16;look=.1+Math.sin(t*.6)*.02;}
+ if(mood==="designing"){la=-.75+small;ra=-.62+Math.sin(t*11)*.13;look=-.08;}
+ if(mood==="filing"){la=-.45+Math.sin(t*2)*.18;ra=-.6+Math.sin(t*2+.7)*.20;look=.07;}
+ if(mood==="phone"){ra=-1.85;rz=-.18;la=-.20;look=.08;}
+ if(mood==="thinking"){ra=-1.42;rz=-.10;look=.22+Math.sin(t*.3)*.06;}
+ if(mood==="inspecting"){la=-.66;ra=-.4+large;look=.28;}
+ if(mood==="stretch"){la=-2.75+Math.sin(t*1.1)*.07;ra=-2.65+Math.sin(t*1.1)*.07;body=Math.sin(t*1.6)*.075;}
+ if(mood==="cleaning"){la=-.52+Math.sin(t*3)*.16;ra=-.85+Math.sin(t*3+Math.PI)*.35;body=Math.sin(t*3)*.08;tilt=.10;}
+ if(mood==="wiping"){la=-.45;ra=-.67+Math.sin(t*4)*.29;body=Math.sin(t*4)*.05;}
+ if(coffee){la=-.80;ra=-.84+Math.sin(t*2.6)*.19;look=.13;}
+ if(carrying){la=-.26;ra=-.78;look=Math.sin(t*.41)*.06;}
+ if(reach){ra=-1.25+Math.sin(t*3)*.16;body=.05;}
+ if(wave){ra=-2.25;rz=Math.sin(t*10)*.33;look=.13;}
+ if(mood==="talking"){la=-.45+Math.sin(t*5)*.18;ra=-.22+Math.sin(t*4)*.15;look=.1;}
+ if(looking){look=.22+Math.sin(t*.7)*.15;}
+ pose(a.arms.left,"x",la);pose(a.arms.right,"x",ra);
+ pose(a.arms.left,"z",lz);pose(a.arms.right,"z",rz);
+ pose(a.torso,"z",body);pose(a.torso,"x",tilt);
+ pose(a.head,"y",look);pose(a.head,"z",Math.sin(t*.9)*.018);
+ // Only nickname remains in the scene. No chat bubble overlays.
+ a.bubble.hidden=true;
 }

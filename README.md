@@ -1,22 +1,8 @@
 # Nalaro Cowork
 
-A personal 3D office simulation inspired by the blocky visual language of Minecraft and Roblox. Nine stylized employees move, work, and receive owner commands. Groq is optional: **idle behavior, navigation, and animation run locally without AI calls**.
+Kantor virtual 3D Minecraft/Roblox-inspired untuk tim Nalaro. Simulasi berjalan lokal di browser, **Groq hanya dipakai untuk menafsirkan perintah bahasa natural yang belum dikenali parser lokal**.
 
-## Features in v0.2
-- Original procedural voxel avatars for **Ulum, Adi, Agil, Ulin, Lukman, Siswo, Huda, Fadil, Sumanto**, with distinct hairstyles, simple faces, role outfits and accessories.
-- Lightweight Three.js office: desks, chairs, glass facade, pantry, meeting, lounge.
-- Floating nicknames, clickable staff, orbit/zoom camera, adaptive pixel ratio.
-- Context-aware weighted idle behaviors; anti-repeat and staggered timing.
-- Simple A* office pathfinding and priority command queue.
-- Commands such as `@fadil samperin lukman dan suruh berdiri`, `@ulum melambaikan tangan`, `@adi pergi ke ruang meeting`.
-- Optional Groq GPT-OSS 20B planner for commands not covered by deterministic parser.
-- Localhost API proxy. Groq API key never leaves the server.
-
-**Important:** This is a playable simulation foundation, not an autonomous coding agent. No repo access, shell execution, invoice processing, or real business operations have been enabled.
-
-## Start
-
-Requires Node.js 20.19+ / 22.12+ and a WebGL2-compatible browser.
+### Mulai (satu terminal)
 
 ```bash
 git clone https://github.com/khoirulzz/nalarocowork.git
@@ -25,50 +11,58 @@ npm install
 npm run dev
 ```
 
-Open **http://127.0.0.1:5173/**. The office works without a Groq key; familiar commands are parsed locally.
+Buka **http://127.0.0.1:5173/**. Tanpa API key sekalipun dunia 3D, animasi idle, dan perintah umum tetap berjalan.
 
-### Optional Groq
+### Mengaktifkan Groq
 
-```bash
-cp .env.example .env
-# Edit .env: GROQ_API_KEY=gsk_...
-npm run server
+Copy `.env.example` menjadi `.env`, lalu isi:
+
+```env
+GROQ_API_KEY=gsk_isi_key_milikmu
+GROQ_MODEL=openai/gpt-oss-20b
 ```
 
-Keep `npm run dev` running in another terminal. The server listens on `127.0.0.1:8787`. A successful connection changes the interface status to “Groq siap”.
+**Restart `npm run dev` setelah mengubah `.env`.** Sejak v0.3, tidak perlu `npm run server` pada terminal kedua: proxy Groq berjalan dalam proses Vite melalui `vite.config.js` dan endpoint same-origin `/api/plan` / `/api/health`. Kunci hanya dibaca pada sisi Node, tidak dikirim ke browser. Jangan menggunakan prefix `VITE_` untuk API key.
 
-Unfamiliar commands use Groq Structured Outputs to produce up to seven validated movement and interaction steps. Unsupported real-world actions are rejected instead of faked.
+Status **Groq siap** ditampilkan di bagian kanan atas bila key sudah terbaca. Model mungkin tetap menolak perintah yang tidak punya aksi fisik di dunia 3D. Ada validasi tambahan pada keluaran model.
 
-### Checks
-```bash
-npm test
-npm run build
+### Cara mencoba
+
+```
+@fadil samperin lukman lalu suruh berdiri
+@adi pergi ke ruang meeting
+@agil buat kopi untuk ulum
+@ulin bersihkan ruang owner
+@fadil ambil dokumen finance lalu taruh di ruang owner
+@ulum melambaikan tangan
 ```
 
-## Source code
+Panel kiri berisi karyawan, panel kanan berisi komando. Masing-masing bisa di-collapse. Klik **Riwayat** untuk drawer aktivitas atau **Objek** untuk melihat ID objek dan properti dasar. Hanya nickname karyawan yang melayang di dalam ruang kantor.
 
+### Perubahan penting v0.3
+- Flat white SaaS UI; tidak ada badge/teks dekoratif di dunia kantor; sidebar kiri-kanan collapsible.
+- Ruangan lebih luas: kantor owner dan rapat tertutup dengan partisi kaca dan pintu, finance, creative, tech, area kerja terbuka, pantry, lounge.
+- Behavior idle berbobot: pekerja lebih lama mengetik/duduk; OB membersihkan zona secara bergiliran. Perilaku idle tidak memusatkan karyawan di satu target.
+- Navigasi A* melalui bukaan partisi; runtime steering menghindari karyawan lain dan mencoba rerouting sebelum bergerak lagi.
+- Semua furnitur/props diberi ID dari registry `WORLD_OBJECTS`. Perintah awal mengambil benda portabel, membuat kopi, meletakkan/menyerahkan benda, membersihkan area.
+- Groq proxy langsung tersedia lewat `npm run dev`; .env tetap tidak dikomit.
+
+### Struktur kode
 ```
 src/
-  main.js       # Three.js scene, UI, camera, dashboard
-  office.js     # interior and obstacle-based pathfinding
-  avatars.js    # modular low-poly rig and voxel faces/hair/outfits
-  behaviors.js  # idle scheduler + animation state + task queue
-  commands.js   # no-token command parser, normalized plans, Groq client
-  roster.js     # 9 character identities and office anchors
-  styles.css    # panel design and responsive layout
-server/index.mjs # optional localhost Groq proxy
-docs/            # architecture & asset standards
-tests/           # command and plan sanity checks
+  main.js      # Three.js & owner dashboard
+  office.js    # world, doors, asset registry, navigation
+  roster.js    # 9 employees, spots and roles
+  avatars.js   # articulated procedural voxel avatars
+  behaviors.js # role-aware idle schedule & interactions
+  commands.js  # local commands and strict validated Groq plan
+  styles.css
+server/groq.mjs # Groq API / rate control
+vite.config.js  # runs local Groq proxy with Vite
 ```
 
-## Art direction
-This is a custom implementation, not a redistributed fork. The avatar profiles were art-directed from provided photos, but **no original photos or photographic face textures are committed** because this is a public GitHub repository. If sharing likeness-based models more broadly, obtain your friends' permission. Different employees share a common pivot-rig hierarchy and can be swapped for detailed GLB models later.
+### Performa dan batasan
 
-## Development status
-**MVP foundation, v0.2**. Animation is procedural, simplified and not full inverse kinematics; characters cannot physically pick up arbitrary objects yet. Pathfinding is coarse grid A* and needs additional QA around furniture. GitHub Actions verifies syntax/build, but visual and FPS testing on the target older laptop are necessary before calling it production-ready.
+Three.js/WebGL2 harus didukung. Pengaturan grafis **Hemat** menurunkan render pixel ratio. Profil FPS aktual bergantung GPU laptop pengguna. Sistem perilaku dan penghindaran tabrakan ini adalah langkah MVP; belum ada physics rigid-body penuh, IK realistis, atau pengujian perilaku sepanjang berjam-jam. Beberapa animasi objek masih disimulasikan dengan proxy tangan sederhana, bukan gerakan manusia sinematik. Aset berbasis foto asli teman tidak dimasukkan ke repo publik.
 
-## Roadmap
-1. GLB asset loading and more personalized rig/face polish; LOD/material merge for GPU.
-2. Improved navigation, chair alignment, social interactions and animation blending.
-3. Persist tasks and office world across sessions.
-4. NalaroStore / GitHub connections with role-based permissions and approval gates.
+Aplikasi **belum memiliki akses ke repo NalaroStore atau tools eksternal lain**. Integrasi proyek nanti perlu sandbox dan approval.

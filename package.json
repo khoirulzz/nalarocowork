@@ -1,10 +1,10 @@
 {
   "name": "nalaro-cowork",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host 127.0.0.1",
+    "dev": "vite",
     "server": "node server/index.mjs",
     "build": "vite build",
     "preview": "vite preview",

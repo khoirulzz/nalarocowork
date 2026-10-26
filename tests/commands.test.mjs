@@ -1,27 +1,50 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { parseLocal,normalizePlan } from "../src/commands.js";
-import { STAFF,PLACES } from "../src/roster.js";
-test("unique staff IDs and world anchors",()=>{
- assert.equal(STAFF.length,9);assert.equal(new Set(STAFF.map(p=>p.id)).size,9);
- for(const p of STAFF)assert.ok(PLACES[p.home],p.id+" lacks desk");
+import * as THREE from "three";
+import {STAFF,PLACES} from "../src/roster.js";
+import {createOffice,WORLD_OBJECTS,getObject,isBlocked,pathfind} from "../src/office.js";
+import {parseLocal,normalizePlan} from "../src/commands.js";
+createOffice(new THREE.Scene());
+test("nine unique employees and workspace anchors",()=>{
+ assert.equal(STAFF.length,9);assert.equal(new Set(STAFF.map(s=>s.id)).size,9);
+ for(const s of STAFF)assert.ok(PLACES[s.home],"missing "+s.id);
 });
-test("Jaksen-style inter-employee command routes Fadil to Lukman",()=>{
- const plan=parseLocal("@fadil tolong samperin lukman dan suruh dia berdiri");
- assert.equal(plan.steps[0].action,"move_to");assert.equal(plan.steps[0].actor,"fadil");
- assert.equal(plan.steps[0].target,"lukman");assert.equal(plan.steps[1].actor,"lukman");
- assert.equal(plan.steps[1].action,"stand");
+test("simulated 3D assets have stable IDs and functions",()=>{
+ for(const id of ["desk_owner","chair_finance","monitor_technical","coffee_machine",
+ "document_finance","tablet_creative","broom_utility","meeting_table","printer_shared"])
+ assert.ok(getObject(id),"missing "+id);
+ assert.ok(WORLD_OBJECTS.size>=30);
+ assert.equal(getObject("document_finance").portable,true);
+ assert.ok(getObject("coffee_machine").actions.includes("make_coffee"));
 });
-test("meeting room and gesture",()=>{
- assert.equal(parseLocal("@adi pergi ke ruang meeting").steps[0].location,"meeting");
- assert.equal(parseLocal("@ulum melambaikan tangan").steps[0].action,"wave");
+test("office has enclosed partitions and walkable doorways",()=>{
+ assert.equal(isBlocked(-8,-7),true);
+ assert.equal(isBlocked(-11,-3),false);
+ assert.equal(isBlocked(11,-3),false);
+ const path=pathfind(PLACES.lobby,PLACES.owner);
+ assert.ok(path.length>10,"could not find route through owner door");
+ for(const [x,z] of path.slice(0,-1)) assert.equal(isBlocked(x,z),false,"wall collision at "+x+","+z);
 });
-test("unknown actions require AI instead of inventing success",()=>{
- assert.equal(parseLocal("@fadil ambil laptop dari meja"),null);
- assert.equal(parseLocal("@tidakada berdiri"),null);
+test("delegate inter-employee instruction",()=>{
+ const s=parseLocal("@fadil samperin lukman dan suruh dia berdiri").steps;
+ assert.deepEqual(s.map(x=>x.action),["move_to","stand"]);
+ assert.equal(s[0].target,"lukman");assert.equal(s[1].actor,"lukman");
 });
-test("reject malicious or made-up plan",()=>{
- assert.throws(()=>normalizePlan({steps:[{actor:"fadil",action:"delete_files",target:null,location:null}]}));
- assert.throws(()=>normalizePlan({steps:[{actor:"unknown",action:"sit",target:null,location:null}]}));
- assert.throws(()=>normalizePlan({steps:[{actor:"fadil",action:"sit",target:null,location:"vault"}]}));
+test("local coffee workflow and area cleaning",()=>{
+ const s=parseLocal("@agil buat kopi untuk ulum").steps;
+ assert.deepEqual(s.map(x=>x.action),["make_coffee","move_to","place_object"]);
+ assert.equal(s[1].target,"ulum");
+ const c=parseLocal("@ulin bersihkan ruang meeting").steps;
+ assert.equal(c[0].action,"clean_area");assert.equal(c[0].location,"meeting");
+});
+test("taking personal office objects and placing them",()=>{
+ const s=parseLocal("@fadil ambil dokumen finance lalu taruh di ruang owner").steps;
+ assert.deepEqual(s.map(x=>x.action),["take_object","place_object"]);
+ assert.equal(s[0].objectId,"document_finance");assert.equal(s[1].location,"owner");
+});
+test("unavailable actions and unknown employees do not pretend to succeed",()=>{
+ assert.equal(parseLocal("@fadil terbang ke bulan"),null);
+ assert.equal(parseLocal("@random berdiri"),null);
+ assert.throws(()=>normalizePlan({steps:[{actor:"fadil",action:"delete_files",target:null,location:null,objectId:null}]}));
+ assert.throws(()=>normalizePlan({steps:[{actor:"fadil",action:"take_object",target:null,location:null,objectId:"nonexistent"}]}));
 });
