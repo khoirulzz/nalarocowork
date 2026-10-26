@@ -31,7 +31,7 @@ const chooseWeighted=(items,previous)=>{
 export class OfficeSimulation {
  constructor(scene,report=()=>{}){
   this.report=report;this.staff=new Map();this.people=this.staff;this.steps=[];this.active=null;
-  this.clock=0;this.obRound=0;
+  this.clock=0;this.obRound=0;this.reservations=new Map();
   for(const profile of STAFF){
    const avatar=createAvatar(profile),home=SEATS[profile.home]||PLACES[profile.home];
    const [x,z]=home;avatar.root.position.set(x,0,z);
@@ -180,7 +180,14 @@ export class OfficeSimulation {
   // Idle travel never uses a target employee's current position.
   const points=ZONES[zone]||[PLACES[zone]];const pt=points[p.idleCycle%points.length];
   if(!pt)return null;
-  if(this.nearby(p).some(other=>distance([other.x,other.z],pt)<1.3))return null;
+  // Avoid two idle employees selecting the same spot, including employees who are en route.
+  const zoneKey=zone+":"+pt.map(x=>x.toFixed(1)).join(":");
+  const now=this.clock;
+  for(const [k,v] of this.reservations){if(v.expires<=now)this.reservations.delete(k);}
+  if([...this.reservations.values()].some(v=>v.actor!==p.p.id && distance(v.point,pt)<1.5))return null;
+  if(this.nearby(p).some(other=>distance([other.x,other.z],pt)<1.5 ||
+    (other.destination && distance(other.destination,pt)<1.5)))return null;
+  this.reservations.set(zoneKey,{actor:p.p.id,point:pt,expires:now+45});
   return pt;
  }
  chooseIdle(p){
@@ -210,12 +217,19 @@ export class OfficeSimulation {
   for(const p of this.staff.values()){
    if(p.route.length){
     const [tx,tz]=p.route[0],dx=tx-p.x,dz=tz-p.z,len=Math.hypot(dx,dz);
-    if(len<.10){p.route.shift();p.blockedFor=0;}
+    if(len<.10){p.route.shift();p.blockedFor=0;if(!p.route.length)p.destination=null;}
     else{
      const stride=Math.min(len,frame*p.speed*1.55);
      const nx=p.x+dx/len*stride,nz=p.z+dz/len*stride;
      const dynamic=this.nearby(p).map(other=>({x:other.x,z:other.z,radius:.51}));
-     if(!isBlocked(nx,nz,dynamic)){
+     // Smooth separation: prevent near-collisions while passing in narrow corridors.
+     // Using both current and proposed positions avoids characters swapping through each other.
+     const collision=this.nearby(p).some(other=>{
+       const sep=Math.hypot(nx-other.x,nz-other.z);
+       const approaching=Math.hypot(p.x-other.x,p.z-other.z);
+       return sep<.64 || (approaching<.85 && sep<approaching-.025);
+     });
+     if(!collision && !isBlocked(nx,nz,dynamic)){
       p.x=nx;p.z=nz;p.blockedFor=0;
       const heading=Math.atan2(dx,dz),yaw=p.avatar.root.rotation.y;
       p.avatar.root.rotation.y+=Math.atan2(Math.sin(heading-yaw),Math.cos(heading-yaw))*Math.min(1,frame*8);
@@ -225,7 +239,7 @@ export class OfficeSimulation {
        // Re-plan around other characters. If no path exists, stop instead of clipping through them.
        const updated=pathfind([p.x,p.z],p.destination,dynamic);
        if(updated.length)p.route=updated;
-       else if(p.blockedFor>3){p.route=[];p.mode="idle";this.report(p.p.name+" menunggu jalur terbuka.");}
+       else if(p.blockedFor>3){p.route=[];p.destination=null;p.mode="idle";this.report(p.p.name+" menunggu jalur terbuka.");}
        p.blockedFor=0;
       }
      }
